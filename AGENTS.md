@@ -1,0 +1,227 @@
+# AGENTS.md: Schlieren
+
+The why. `CLAUDE.md` has the commands; `README.md` the claims and the numbers.
+
+## The idea
+
+Allan asked (2026-10-13) for "a new sound reactive resolume plugin, which creates
+pressure waves to the beat of the music". Pressure waves are invisible; the way
+anyone has ever seen one is a schlieren photograph. So the plugin is the whole
+chain, with nothing drawn:
+
+1. **The speaker** (`Acoustics.cpp`). A sphere of radius a = 0.1 m whose far
+   field is a monopole's, exact in linear acoustics: p = ( a / r ) P_a f( τ ),
+   τ = t − ( r − a ) / c. Three waveforms, each with zero net impulse (the
+   pressure is the cone's acceleration, and a cone that comes back to rest has
+   accelerated by nothing overall): Pop (a Gaussian velocity pulse), Kick (a
+   decaying sine started smoothly, as the derivative of the cone's velocity) and
+   Blast (Friedlander, b = 1, the one decay with zero impulse).
+2. **Steepening.** Weak-shock theory for a spherical wave: along the age
+   variable s = a ln( r / a ) the waveform obeys the inviscid Burgers equation.
+   `Steepen()` takes its entropy solution as the Lax–Oleinik minimiser, from the
+   lower convex hull of H = s W + Y²/2 over the samples. A long hull edge is a
+   shock at the equal-area position; the states either side are read where the
+   characteristic map crosses it.
+3. **The air** (`Air.cpp`). Pulses fire on the host's beat (placed inside the
+   frame), on onsets, or on Fire; each becomes a shell in radius, simplified;
+   the walls are the speaker's images.
+4. **The beam** (`Shaders.cpp`, abel + field). P( ρ ) = ∫ p dz, an Abel
+   transform, in closed form per segment of the shell's polyline, into a table
+   per pulse; then summed over images per pixel.
+5. **The optics** (composite). ε = ( K / c² ) ∇P, the Gladstone–Dale constant
+   over c², as a central difference over two pixels. Then a knife edge, a colour
+   wheel, a shadowgraph screen at Distance, or a backdrop at Distance.
+
+## Decisions taken without asking (the brief says decide and write it down)
+
+- **Name and id.** `SW Schlieren`, `SZ01` (SC01, SL01 and SN01 are taken), bundle
+  `com.stoatworks.ffgl.schlieren`, harness `sztest`. `stoatworks-labs/schlieren`
+  did not exist on 2026-10-13.
+- **The one cheat: slow motion.** Sound crosses a 6 m frame in 9 ms. The camera
+  is a high-speed one (Slow Motion 30–30 000×, i.e. 1 800 to 1 800 000 fps played
+  at 60), but the beats arrive in real time: each real beat launches a pulse that
+  is then watched slowed. Physically the beats would be 1.25 ms apart in the air
+  at 400×; nobody wants that.
+- **Real units, honest ranges.** Loudness is peak dB SPL at 1 m (120–190). The
+  deflections a real pulse makes are microradians: the default 165 dB pulse at
+  2 m bends light by a few arcseconds, which is why real schlieren systems are
+  sensitive to fractions of one. Sensitivity is that, in arcseconds (50″ → 0.05″).
+  **Distance runs to 100 km** because a pixel of warp from a few arcseconds needs
+  a backdrop kilometres away; real background-oriented schlieren uses distant
+  terrain for the same reason (NASA's airborne BOS photographs shocks against the
+  desert floor). Nothing is scaled to make it look better: the numbers are what
+  it takes.
+- **Length** is the time from the compression's peak to the rarefaction's trough
+  for every shape (Pop: 2σ; Kick: half a period; Blast: 2 t+), so one Length is
+  one size of ring.
+- **The defaults** were chosen by eye (fiche's first look got "try again"): a
+  0.5 ms Pop at 165 dB on every beat from the middle of a 6 m field at 400×,
+  through a knife edge (12″ to white) focused 150 m beyond: glassy embossed
+  rings with the clip bent through them, not saturated. 2000 m and 5″ were
+  tried first and washed the clip out.
+- **Grey Field** mixes the bare schlieren field (code 0.5) into the slide, so a
+  dark clip still shows rings; 1 is a classic grey schlieren photograph.
+- **Accent** only applies when audio is routed. With nothing routed, every pulse
+  is at Loudness, rather than at Loudness minus 30 dB because silence is quiet.
+- **Limits.** 24 pulses (the oldest go first), 128 terms (the weakest go first,
+  counted in `Plan::dropped`), images to order 6, a shell to 256 vertices.
+- Provisional `StoatworksAbout.h` and `ATTRIBUTIONS.md` are hand copies from
+  fiche with `guide = ""` (no user guide yet, so no guide button), as graticule
+  did. The fleet's sync scripts overwrite them on registration.
+
+## The traps actually hit
+
+Ordered by how much they would have cost.
+
+**A shock's state is not its foot vertex's.** The hull gives the shock's position
+exactly, but the state either side was first taken as ( X_s − Y_v ) / s at the
+hull vertex v. The true foot is where the tangent touches H, generally inside a
+cell, and the error is up to a cell over s, which is most of the jump while the
+steepening is only a few cells old. A barely-steepened top hat's front came out
+as a jump from 1.026 to −0.026. The fix reads each state where the characteristic
+map, exact and linear on each cell, crosses X_s. `--abel`'s top hat found it.
+
+**A fan meeting a shock.** A jump in the waveform (the top hat's back edge) is
+a rarefaction fan; its two samples' characteristics span it. The first version
+clamped the fan's top vertex onto the shock, which made the fan too steep and the
+impulse 1.73 times what it should be. Godunov did not catch it, because no
+shipped shape has a fan; the closed-form top hat did. The fan is now cut where
+it meets the shock.
+
+**A simplifier must not bridge silence.** Douglas–Peucker joined the padding's
+zeros to the first audible sample with one chord, within tolerance everywhere,
+and so put a hair of pressure up to 2.6 mm *ahead* of the wavefront, where nothing
+has arrived. `--speed` found it. The edges of silence are now always kept.
+
+**Sample where the cone first moves.** The steepening grid started at −pad, so
+θ = 0 fell between samples and the front's foot was up to a sample early. The
+grid is shifted to put a sample at θ = 0.
+
+**A shock front outruns sound.** A Blast's front is a shock and moves at c plus
+half its strength (Rankine–Hugoniot), 0.07 px ahead of a + c t at 125 dB.
+That is physics, not a bug: `--speed` measures c on a Pop, whose leading foot
+is at zero pressure and travels at exactly c.
+
+**A check that shares a constant with the code is blind to it.** The reference
+projection first used the shell's own gain, 2 a P_a, so a wrong gain was wrong
+on both sides. It now takes its pressure from the pulse's dB at 1 m. Likewise
+the air's constants are checked against the ideal gas and Edlén's refractive
+index (`--air`), not against themselves.
+
+**An unbounded loop in the render thread.** `ShellAt` doubled its tolerance
+until a shell fitted 256 vertices; jumps are always kept, so a shell with more
+than 256 of them looped for ever. A mutant (radii reversed: every vertex a
+"jump") found it. It now stops at the peak and thins evenly.
+
+**`mutate.sh` under pipefail (FLEET-WIDE).** A mutant that times out (counted as
+caught) prints no FAIL line, so the summary's `grep` exits 1 and `set -euo
+pipefail` ends the script there, with no summary and no error. fiche's copy has
+the same line; it never fired there because none of its mutants timed out.
+Fixed here with `{ grep … || true; }`.
+
+**Names the SDK already has.** `ParamInfo` is `CFFGLPluginManager::ParamInfo`
+inside the plugin class (ours is `ControlInfo`); an option enum and a struct
+can't both be `Pulse` (the enum is `PulseKind`).
+
+**The harness's music was too clean.** Kicks on silence clear any onset
+threshold, so the sweep called Threshold dead. Real music has a busy floor;
+`--kicks` now has a hi-hat with a fresh level every frame.
+
+**A pulse that leaves the frame is let go** (when its interior can no longer bend
+the light by a thousandth of what would show). `--spreading` waited for a ring to
+reach 11 m in a 6 m frame and waited for ever; it uses a 50 m field.
+
+## Verified, and assumed
+
+Verified on this Mac (numbers in README Status): everything `tools/verify.sh`
+runs. In words: the constants are dry air's at 20 °C; the steepening is the
+entropy solution (closed forms, Godunov, s*); the projection table is the line
+of sight integral of the shell to 2e-5 of its magnitudes; the field is the image
+sum; the front is at a + c t to the clock, sub-pixel; the projection fades as
+R^−½; each optic obeys its law per pixel against the reference; a rigid wall
+mirrors the field exactly; beats, onsets and Accent behave; a resize keeps the
+air; the host's GL state comes back.
+
+Assumed, not measured:
+
+- **Thin-shell steepening.** A pulse is steepened at one age, at its centroid's
+  radius. The error in the shift is the shell's width over r ln( r / a ) of the
+  shift: a percent or two where there is any shift worth having.
+- **Weak-shock theory past its range.** At 190 dB at 1 m the cone's surface sees
+  30 times atmospheric pressure. Weak-shock theory is honest to perhaps a third
+  of an atmosphere; above ~170 dB it is a look, not a prediction.
+- **Linear superposition of the images**, shocks and all. Exact for linear
+  acoustics; for shocked pulses meeting their reflections it is not (Mach stems,
+  for one, are absent).
+- **The shadowgraph past a fold** is the nearest branch's light, capped at 16×:
+  not conserved. Before the first caustic it is (`--shadow`).
+- **The simplification**: the profile to 1e-4 of the peak, the shell to 2e-4.
+  The table check bounds what reaches the GPU, not what the simplifier removed;
+  `--steepen` bounds that separately.
+- **Resolume's FFT bins** are unmeasured (fleet-wide), so Accent's dB per unit
+  of level and the onset threshold are guesses that worked on the harness's
+  music.
+- **Infinite beam depth**: the line of sight runs through all of z. A real test
+  section is finite; for a spherical shell smaller than it, the same thing.
+
+## Would this hold on another rasteriser, at another raster?
+
+- `--air`, `--steepen`, `--beat`, `--cues`, `--names`: no GL, double precision.
+- `--abel`: the table is in metres and has no raster. Its bound is per texel:
+  2e-5 of the magnitudes' projection (a float32 sum of ≤ 256 segments), plus the
+  texel's radius rounded in float (4 ulp of R) times the local slope. No GPU's
+  `log` near 1 is relied on (series).
+- `--field`: per pixel, the measured interpolation error of the table at the
+  pixel's two texels (from the reference), the table's own bound, and the
+  pixel's distance rounded in float times the table's slope. Both rasters.
+- `--speed`: a bracket between the last pixel with P ≠ 0 and the first with
+  P = 0. Exact by construction (the shader returns 0 beyond R); slack 10 µm for
+  float. Both rasters.
+- `--spreading`: from the table (no raster). Tolerance 2 w / R, the asymptote's
+  own correction.
+- `--knife`, `--background`, `--shadow`: per pixel, the deflection's bound from
+  the field's, through each optic's slope. The background adds 1/256 px for a
+  sampler's fixed-point weights (the clip is sampled through the hardware).
+  The shadowgraph's first-order law adds the second-order term computed from the
+  reference's own second differences; its conservation is 1e-3 of the frame's
+  light (measured ~1e-6). Both rasters.
+- `--colour`: identities of the wheel (mean 1, complementary opposites, a 120°
+  cycle) to 1e-4; the knife's cos/sin are computed on the CPU in double.
+- `--walls`: a mirror pair of texels sums the same terms in a different order;
+  bound 64 ulp × terms of the magnitude. The floor's pair is bit-identical.
+- `--resize`, `--state`: byte-exact / state queries. Raster-independent.
+
+All of it runs again on Apple's software renderer at 320×180 in `verify.sh`.
+
+## The negative controls and mutants
+
+Each check fails against a wrong model (`--negative`, 16): the shock at the
+feet's midpoint; Poisson's folded solution; a beat at its frame's start; the
+shell without its 1/r (twice); the table read uniform in ρ; sound 2% fast; the
+knife flipped; a one-sided difference; the wheel turned backwards; light moved
+but not concentrated; the backdrop seen backwards; pressure-release walls;
+Accent with no audio; a resize that forgets the air; every cue ramped.
+
+`tools/mutate.sh` changes one character of the shipped GLSL or C++ sixteen times
+and requires the named check to fail; all sixteen are caught, none by timeout.
+
+## The sweep's honest list
+
+`tools/sweep.py --bare` (no per-control context): Threshold and Accent are dead
+without music; Reflection is dead without walls; Walls is barely alive at the
+defaults (2.5 s at 400× only just reaches the edges). Everything else acts from
+the defaults.
+
+## Not done
+
+- **Never loaded into Resolume**, on macOS or Windows. Windows never built (the
+  CI's Windows job is fiche's, renamed, and has never run).
+- The fleet's Arena gate will see Fire and Clear as event-shaped (millpond's
+  Drop had the same blind spot), and with Fire On at Beat the rings move between
+  any two grabs: expect the gate to need `Fire On: Off` plus a Fire press per
+  row, or to mark the ring controls inconclusive.
+- No user guide, no video, no browser demo, no OpenFX port, no presets.
+- Open questions for Allan: a speaker silhouette (real schlieren photographs show
+  the source as a shadow); a stereo pair of speakers (the image machinery makes
+  it cheap); air temperature (c, ρ and n all move with it); whether the 100 km
+  Distance reads as a joke or a feature in the inspector.

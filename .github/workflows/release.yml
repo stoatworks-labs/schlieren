@@ -1,8 +1,8 @@
 name: release
 
-# Build the Fiche FFGL plugin for the two platforms Resolume runs on:
-#   - macOS   -> universal (arm64 + x86_64) Fiche.bundle
-#   - Windows -> x64 Fiche.dll (GLEW static-linked via vcpkg)
+# Build the Schlieren FFGL plugin for the two platforms Resolume runs on:
+#   - macOS   -> universal (arm64 + x86_64) Schlieren.bundle
+#   - Windows -> x64 Schlieren.dll (GLEW static-linked via vcpkg)
 # Each ships as a zip; drop the bundle/dll into Resolume's "Extra Effects"
 # folder. Trigger manually (Actions > release > Run workflow) or by pushing a
 # v* tag.
@@ -33,20 +33,20 @@ jobs:
           # so x86_64 is cross-compiled from Apple Silicon rather than built
           # natively. CMAKE_OSX_ARCHITECTURES in CMakeLists.txt does that on
           # its own; there is nothing to set here.
-          - { name: macos-universal, os: macos-14,       artifact: Fiche.bundle }
-          - { name: windows-x86_64,  os: windows-latest, artifact: Fiche.dll }
+          - { name: macos-universal, os: macos-14,       artifact: Schlieren.bundle }
+          - { name: windows-x86_64,  os: windows-latest, artifact: Schlieren.dll }
     steps:
       - uses: actions/checkout@v7
         with:
           submodules: recursive
 
       # --- macOS: no extra deps, universal build straight from CMake ---
-      # Tools off: mftest links against zlib and CGL and is a developer
+      # Tools off: sztest links against zlib and CGL and is a developer
       # harness, not something that ships. The checks it runs happen locally
       # via tools/verify.sh.
       - name: Configure (macOS)
         if: runner.os == 'macOS'
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DFICHE_BUILD_TOOLS=OFF
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DSCHLIEREN_BUILD_TOOLS=OFF
 
       # --- Windows: GLEW comes from vcpkg, static-linked (static-md keeps the
       #     CRT dynamic so the plugin matches the host) so the .dll has no
@@ -56,7 +56,7 @@ jobs:
         run: >
           cmake -B build -A x64
           -DCMAKE_BUILD_TYPE=Release
-          -DFICHE_BUILD_TOOLS=OFF
+          -DSCHLIEREN_BUILD_TOOLS=OFF
           -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
           -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
 
@@ -78,7 +78,7 @@ jobs:
         run: |
           mkdir -p out
           if [ "${{ runner.os }}" = "macOS" ]; then
-            cp -R "build/Fiche.bundle" "out/Fiche.bundle"
+            cp -R "build/Schlieren.bundle" "out/Schlieren.bundle"
             # Sanity-check the bundle really is universal and exports plugMain.
             # An arm64-only build logs as a success, and a bundle that exports
             # nothing loads cleanly and reports that it contains no plugins --
@@ -88,7 +88,7 @@ jobs:
             # FAILS when grep FINDS its match: grep exits at once, the writer takes
             # SIGPIPE, and pipefail reports the pipeline as failed. Captured and
             # matched with `case` instead.
-            __archs=$( lipo -archs "out/Fiche.bundle/Contents/MacOS/Fiche" )
+            __archs=$( lipo -archs "out/Schlieren.bundle/Contents/MacOS/Schlieren" )
             echo "architectures: $__archs"
             case "$__archs" in
               *x86_64*) ;;
@@ -98,13 +98,13 @@ jobs:
               *arm64*) ;;
               *) echo "expected arm64, got: $__archs"; exit 1 ;;
             esac
-            __symbols=$( nm -gU "out/Fiche.bundle/Contents/MacOS/Fiche" )
+            __symbols=$( nm -gU "out/Schlieren.bundle/Contents/MacOS/Schlieren" )
             case "$__symbols" in
               *_plugMain*) ;;
               *) echo "expected _plugMain, got: $__symbols"; exit 1 ;;
             esac
           else
-            cp "build/Release/Fiche.dll" "out/Fiche.dll"
+            cp "build/Release/Schlieren.dll" "out/Schlieren.dll"
           fi
           ls -R out
 
@@ -113,9 +113,9 @@ jobs:
         run: |
           cd out
           if command -v 7z >/dev/null 2>&1; then
-            7z a "../fiche-${{ matrix.name }}.zip" ./*
+            7z a "../schlieren-${{ matrix.name }}.zip" ./*
           else
-            zip -r "../fiche-${{ matrix.name }}.zip" ./*
+            zip -r "../schlieren-${{ matrix.name }}.zip" ./*
           fi
 
       - name: Disk image (macOS)
@@ -128,16 +128,16 @@ jobs:
         # half of users.
         run: |
           source scripts/release-lib.sh
-          rl_init "Fiche" fiche "${{ steps.ver.outputs.version }}" \
-            com.stoatworks.fiche "$GITHUB_WORKSPACE"
+          rl_init "Schlieren" schlieren "${{ steps.ver.outputs.version }}" \
+            com.stoatworks.schlieren "$GITHUB_WORKSPACE"
           cp README.md out/ 2>/dev/null || true
-          rl_adhoc_sign "out/Fiche.bundle"
+          rl_adhoc_sign "out/Schlieren.bundle"
           rl_dmg "${{ matrix.name }}" out
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: fiche-${{ matrix.name }}
+          name: schlieren-${{ matrix.name }}
           path: |
             *.zip
             *.dmg
@@ -167,8 +167,8 @@ jobs:
           source scripts/release-lib.sh
           version="${GITHUB_REF_NAME#v}"
           case "$version" in [0-9]*) ;; *) version="0.0.0" ;; esac
-          rl_init "Fiche" fiche "$version" com.stoatworks.fiche "$PWD/installers"
-          zip="$(find artifacts -name "fiche-windows-x86_64.zip" | head -1)"
+          rl_init "Schlieren" schlieren "$version" com.stoatworks.schlieren "$PWD/installers"
+          zip="$(find artifacts -name "schlieren-windows-x86_64.zip" | head -1)"
           if [ -z "$zip" ]; then echo "no Windows artefact, nothing to do"; exit 0; fi
           stage="$RUNNER_TEMP/stage-win"
           rm -rf "$stage"; mkdir -p "$stage"
@@ -181,7 +181,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: fiche-windows-installer
+          name: schlieren-windows-installer
           path: installers/*
           if-no-files-found: warn
 

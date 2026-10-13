@@ -1930,34 +1930,37 @@ int runAudio( const Perturb& perturb )
 int runResize( const Perturb& perturb )
 {
 	std::printf( "\n=== resize: after the host's raster changes, the picture is exactly a fresh instance's that saw the same beats\n" );
-	const Floats a = buildCard( 1280, 720 ), b = buildCard( 640, 360 );
+	//Twice the last raster, then the raster: the air is in metres, so it must
+	//not notice. (Small, so the software renderer gets through it.)
+	const Raster small = kRasters.back(), big = { 2 * small.w, 2 * small.h };
+	const Floats a = buildCard( big.w, big.h ), b = buildCard( small.w, small.h );
 	auto configure = []( Rig& rig ) {
 		quiet( rig );
 		rig.bpm = 120.0;
 		rig.Set( PT_FIRE_ON, static_cast< float >( FireOn::Beat ) );
-		rig.Set( PT_WALLS, static_cast< float >( Walls::Box ) );
 		rig.Set( PT_DISTANCE, ParamFromDistance( 300.0 ) );
 	};
 	Rig resized;
-	if( !resized.Init( 1280, 720, &a ) )
+	if( !resized.Init( big.w, big.h, &a ) )
 		return 1;
 	resized.plugin.SetHooksForTest( perturb.hooks );
 	resized.plugin.SetResizeClearsForTest( perturb.resizeClears );
 	configure( resized );
-	if( !resized.Render( 100 ) || !resized.Resize( 640, 360, &b ) || !resized.Render( 3 ) )
+	if( !resized.Render( 70 ) || !resized.Resize( small.w, small.h, &b ) || !resized.Render( 3 ) )
 		return 1;
 	Rig fresh;
-	if( !fresh.Init( 640, 360, &b ) )
+	if( !fresh.Init( small.w, small.h, &b ) )
 		return 1;
 	configure( fresh );
-	if( !fresh.Render( 103 ) )
+	if( !fresh.Render( 73 ) )
 		return 1;
 	const Floats x = resized.Output(), y = fresh.Output();
 	int differ = 0;
 	for( size_t i = 0; i < x.size(); ++i )
 		differ += byteOf( x[ i ] ) != byteOf( y[ i ] );
 	Check( differ == 0 && !fresh.plugin.LastPlan().terms.empty(),
-	       fmt( "1280x720 for 100 frames at 120 BPM in a box, then 640x360 for 3, against 640x360 for all 103: %d bytes differ", differ ) );
+	       fmt( "%dx%d for 70 frames at 120 BPM, then %dx%d for 3, against %dx%d for all 73: %d bytes differ", big.w, big.h, small.w, small.h,
+	            small.w, small.h, differ ) );
 	return Verdict();
 }
 

@@ -7,11 +7,11 @@ name: ci
 # macOS and Windows. The CMakeLists branches on APPLE and WIN32 and has no
 # Linux path at all, so ubuntu is not an option. The Windows job is pitch's,
 # adapted: a GLEW-shaped break is one macOS is structurally blind to, because
-# macOS never links GLEW. (Fiche has never been built on Windows; this job is
+# macOS never links GLEW. (Schlieren has never been built on Windows; this job is
 # the first place it would be.)
 #
 # The macOS runner cannot create an accelerated GL context, so the harness runs
-# `mftest --offline`: every check mftest's main() marks as needing no GL, and
+# `sztest --offline`: every check sztest's main() marks as needing no GL, and
 # their negative controls. The shaders are covered the other way, by glslc.
 # The pixel checks run in tools/verify.sh, on a Mac with a GPU and again on
 # Apple's software renderer at 320x180 -- what this runner would fall back to.
@@ -38,27 +38,27 @@ jobs:
         # break is not architecture-specific. Passed as a single value with no
         # semicolon, which the shell would split.
         #
-        # FICHE_BUILD_TOOLS is ON here where the release build turns it OFF:
-        # mftest is a large slice of the C++, and --offline needs it.
+        # SCHLIEREN_BUILD_TOOLS is ON here where the release build turns it OFF:
+        # sztest is a large slice of the C++, and --offline needs it.
         run: >
           cmake -B build
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_OSX_ARCHITECTURES=arm64
-          -DFICHE_BUILD_TOOLS=ON
+          -DSCHLIEREN_BUILD_TOOLS=ON
 
       - name: Build
         run: cmake --build build --config Release --parallel
 
       - name: Parameters
         # No GL needed, so this one cannot be a runner problem.
-        run: ./build/mftest --list
+        run: ./build/sztest --list
 
       - name: Offline checks
         # Physics and registration, with their negative controls, and never a
-        # GL context. The set is defined once, in mftest's main(); it is not
+        # GL context. The set is defined once, in sztest's main(); it is not
         # listed here, so a new check cannot silently go untested in CI.
         timeout-minutes: 30
-        run: ./build/mftest --offline
+        run: ./build/sztest --offline
 
       - name: Shaders compile
         # The same script tools/verify.sh runs. GLSLC_REQUIRED: a runner
@@ -74,7 +74,7 @@ jobs:
       # actually exercises the action being bumped.
       - uses: actions/upload-artifact@v7
         with:
-          name: fiche-macos-arm64
+          name: schlieren-macos-arm64
           path: build/*.bundle
           if-no-files-found: error
 
@@ -88,12 +88,12 @@ jobs:
 
       - name: Configure
         # The toolchain path MUST stay double-quoted: a `run:` step on Windows
-        # is PowerShell, and unquoted this expands to nothing. Tools off: mftest
+        # is PowerShell, and unquoted this expands to nothing. Tools off: sztest
         # links CGL and is macOS-only.
         run: >
           cmake -B build -A x64
           -DCMAKE_BUILD_TYPE=Release
-          -DFICHE_BUILD_TOOLS=OFF
+          -DSCHLIEREN_BUILD_TOOLS=OFF
           -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
           -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
 
@@ -102,6 +102,6 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: fiche-windows-x86_64
+          name: schlieren-windows-x86_64
           path: build/Release/*.dll
           if-no-files-found: error
