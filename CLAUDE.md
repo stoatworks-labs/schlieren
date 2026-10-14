@@ -35,7 +35,8 @@ simplification, the projection table's mapping or the composite's stencils.
 - **The optics**: `--knife`, `--colour`, `--shadow`, `--background`; `--walls`.
 - **The rest**: `--audio`, `--resize`, `--state`, `--cues`, `--names`.
 - The checks can fail: `--negative` (16 wrong models), `tools/mutate.sh` (16 mutants).
-- No dead controls: `python3 tools/sweep.py` (21 live; `--bare` lists the four
+- No dead controls: `python3 tools/sweep.py` (21 swept, all live; the 22nd
+  control, Audio, is driven through Threshold and Accent; `--bare` lists the four
   that need a context).
 - Render cost: `./build/sztest --bench`.
 
@@ -67,16 +68,28 @@ simplification, the projection table's mapping or the composite's stencils.
 - `schlieren_core` is an OBJECT library: the plugin registers itself from a
   file-scope constructor nothing references.
 - The macOS build must be universal. Check with `lipo`, never the build log.
-- Local repo only: no GitHub repo, no tag, not registered in the fleet's tables.
+- Public at github.com/stoatworks-labs/schlieren and registered on the website
+  (https://stoatworks-labs.com/software/schlieren/, the guide at `.../guide/`).
+  v0.1.0 (2026-10-14) is the first release.
+- Generated, do not edit: `source/StoatworksAbout*.h` (stoatworks-backend's
+  `sync-about.py`: four buttons, User guide, Project page, Source on GitHub,
+  Support the work), `ATTRIBUTIONS.md`, `.github/FUNDING.yml` and the issue
+  forms (the backend's sync scripts), and the README's downloads block
+  (`gen-downloads.py`, after the tag). Edit the sources in the backend.
 
 ## Not done yet
-- Never loaded into Resolume, on either platform. Windows never built.
-- No user guide (the About block has no guide button), no browser demo, no
-  OpenFX port, no video.
-- `StoatworksAbout.h` and `ATTRIBUTIONS.md` are provisional hand copies.
+- Never loaded into Resolume on macOS. No host has played it any music.
+- Windows: gated in Arena 7.27.1 on win-lab (llvmpipe, no sound): 9 passed, audio
+  skipped; 8 controls live, the 10 ring controls inconclusive (the air never
+  stands still), none dead; plugin-bench `arena/expect/schlieren.json`.
+- No browser demo, no OpenFX port, no video, no presets. The user guide is
+  `docs/USER-GUIDE.md`.
 
 ## Diagnostics
 
 `source/Diag.{h,cpp}`: log file only, no crash handler (this runs inside Resolume).
 
     ~/Library/Logs/schlieren/schlieren.YYYY-MM-DD.log
+    %LOCALAPPDATA%\schlieren\logs\schlieren.YYYY-MM-DD.log
+
+`SCHLIEREN_LOG_DIR` overrides the folder.

@@ -1,15 +1,20 @@
 # schlieren
 
 > **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
-> (Anthropic), directed and reviewed by a human author. The behaviour is measured rather
-> than asserted: an offline harness drives the real plugin class in a headless GL context
+> (Anthropic), directed and reviewed by a human author. Its behaviour is measured rather
+> than asserted: an offline harness drives the plugin's own class in a headless GL context
 > and checks each claim. The pulse fronts sit at a + c t to under a pixel. The beam's
-> projection of every pulse matches a brute-force line-of-sight integral to 2e-5. Shocks form
-> where weak-shock theory says, and the steepened waveforms agree with an independent Godunov
-> solver and with closed forms. Every optic obeys its law pixel by pixel, and a rigid wall
-> mirrors the field exactly. 16 negative controls and 16 one-character mutants prove the
-> checks can fail. It has **never been loaded into Resolume**, on either platform. See
-> [Status](#status).
+> projection of every pulse matches a brute-force line-of-sight integral to 2e-6 of its
+> peak (2e-4 right at a Blast's shock front). Shocks form where weak-shock theory says, and
+> the steepened waveforms agree with an independent Godunov solver and with closed forms.
+> Every optic obeys its law pixel by pixel, and a rigid wall mirrors the field bit for bit.
+> 16 negative controls and 16 one-character mutants prove the checks can fail. It's
+> **never been loaded into Resolume on macOS**.
+> On Windows it loads, registers and renders in Resolume Arena 7.27.1 on a machine with
+> software rendering and no GPU or sound device, with every control as declared; how much of
+> the rest that run could see is in Status.
+> The full rundown is under [Status](#status), and there's a
+> [user guide](docs/USER-GUIDE.md).
 
 Pressure waves on the beat, seen through a schlieren camera, as an FFGL effect for
 [Resolume](https://resolume.com) Arena and Avenue.
@@ -71,12 +76,12 @@ None of this is drawn. Each is the air or the optics doing what it does.
 | **Beat** | Fire On (Beat, Half Beat, 2 Beats, Bar, Onset, Off), Fire (a pulse now), Audio (Resolume's audio input), Threshold (how hard an onset must hit), Accent (0–30 dB: how much quieter the softest hit is than the hardest). |
 | **Speaker** | Loudness (peak, 120–190 dB SPL at 1 m), Pulse (Pop, Kick, Blast), Length (0.05–20 ms, peak to trough), Speaker X, Speaker Y. |
 | **Air** | Field Width (the frame, 0.5–50 m), Slow Motion (30–30 000×: the camera at 1 800 to 1 800 000 fps), Walls (Open, Floor, Box), Reflection (the walls' pressure reflection, 0–1), Clear (let every pulse go). |
-| **Optics** | Optics (Knife Edge, Colour, Shadowgraph, Background), Knife Angle (0–360°), Sensitivity (the bend that takes the knife from grey to white, 50″ down to 0.05″), Distance (where the camera is focused, the screen is or the backdrop stands: 0, then 10 m to 100 km), Grey Field (mix in the bare schlieren field, so dark clips show rings too). |
+| **Optics** | Optics (Knife Edge, Colour, Shadowgraph, Background), Knife Angle (0–360°), Sensitivity (the bend that doubles the light through the knife, or bent the other way cuts it to black, 50″ down to 0.05″), Distance (where the camera is focused, the screen is or the backdrop stands: 0, then 10 m to 100 km), Grey Field (mix in the bare schlieren field, so dark clips show rings too). |
 | **Output** | View (Picture, Pressure, Deflection: the air on its own), Mix. |
 
 The defaults are a starting pistol's crack, half a millisecond long at 165 dB, fired on
 every beat from the middle of a 6 m stretch of air and filmed at 400×, through a knife
-edge set to go white at 12 arcseconds and focused 150 m beyond the air.
+edge set to double the light at 12 arcseconds of bend and focused 150 m beyond the air.
 
 Yes, 150 metres, and Distance goes to 100 km. Sound bends light by a few arcseconds,
 so a pixel of warp needs a backdrop a long way off. Real background-oriented schlieren
@@ -86,7 +91,7 @@ not a dial turned up for effect.
 
 ## Status
 
-**v0.1.0, local and unreleased, 13 October 2026.**
+**v0.1.0, 14 October 2026: the first release, and early days.**
 
 ### Measured offline, on macOS
 
@@ -112,7 +117,7 @@ universal Release build. It runs every picture check at **two rasters**, 1280×7
 | `--resize`, `--state` | a new raster is the same air (**0 bytes** differ); the host's GL state comes back |
 | `--negative` | **16** deliberately wrong models, **16** caught |
 | mutation | **16** one-character mutants of the shipped GLSL and C++, **16** caught |
-| `tools/sweep.py` | all **21** controls measurably change the picture |
+| `tools/sweep.py` | all **21** controls it can move measurably change the picture; the 22nd, Audio, is the input Threshold and Accent are swept through |
 | shaders | all 4 compile through `glslc`, not merely through Apple's driver |
 | the bundle | universal (`x86_64 arm64`), exports `plugMain`, ad-hoc signs; `oxbow` reports `SW Schlieren` / `SZ01` / `effect` and renders 120 frames through `plugMain` |
 
@@ -124,18 +129,32 @@ images in flight: **0.60**, **1.10** and **4.04 ms**. macOS figures only.
 
 ### Not established
 
-It has **never been loaded into Resolume**, on macOS or Windows, and it has never been
-built for Windows. Everything above was compiled, rendered and measured offline
-against the real plugin class in a headless CGL context, plus an `oxbow` load. How
-the 21 controls read in Arena's inspector, how Fire On Beat follows Resolume's real
-transport, and how Accent and Threshold behave on Resolume's real FFT are untested.
+It's **never been loaded into Resolume on macOS**. Everything above was compiled,
+rendered and measured offline against the plugin's own class in a headless CGL context,
+plus an `oxbow` load. On a Mac, I haven't seen how the 22 controls read in Arena's
+inspector or how Fire On follows Arena's transport. No host anywhere has played it any
+music, so how Accent and Threshold behave on Resolume's own FFT is untested.
 
-Weak-shock theory is honest up to about a third of an atmosphere at the speaker; past
-roughly 170 dB at 1 m it's a good look rather than a prediction. Reflections are
-superposed linearly, so shocks meeting their own echoes do nothing clever. AGENTS.md
-lists every approximation.
+On Windows, the x64 build loads, registers and renders in Resolume Arena 7.27.1 on the
+fleet's Windows machine, which has software rendering (Mesa llvmpipe), no GPU and no
+sound device. It passed all 9 of the fleet's Arena checks that can run there (the audio
+one is skipped): every control as declared, by name, order, type, range and default, and
+nothing in Arena's log. Eight controls measurably changed the picture there (Loudness,
+Field Width, Sensitivity, Distance, Grey Field, View, Mix and Arena's own Opacity). The
+other ten that act on the rings (Fire On, Pulse, Length, the speaker's position, Slow
+Motion, Walls, Reflection, Optics and Knife Angle) came back too close to call rather
+than dead: with a pulse on every beat the air never sits still between two of the gate's
+grabs, so it can't tell a control's change from the rings moving. Threshold, Accent and
+the Audio input need sound, which that machine hasn't got.
 
-No user guide yet, no browser demo, no OpenFX port.
+Weak-shock theory is honest up to about a third of an atmosphere at the speaker's
+surface. That's about 165 dB at 1 m, which is where the default sits; past roughly
+170 dB (over half an atmosphere at the surface) it's a good look rather than a
+prediction. Reflections are superposed linearly, so shocks meeting their own echoes do
+nothing clever. AGENTS.md lists every approximation.
+
+There's a [user guide](docs/USER-GUIDE.md), but no browser demo, no OpenFX port and no
+presets.
 
 ## Build
 
