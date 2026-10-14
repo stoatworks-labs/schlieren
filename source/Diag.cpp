@@ -40,7 +40,7 @@ std::string homeDirectory()
 /// Same locations the rest of the fleet uses, so one folder holds everything.
 std::string logDirectory()
 {
-	const std::string override_ = environmentVariable( "MILLPOND_LOG_DIR" );
+	const std::string override_ = environmentVariable( "SCHLIEREN_LOG_DIR" );
 	if( !override_.empty() )
 		return override_;
 

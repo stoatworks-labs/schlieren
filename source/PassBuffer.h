@@ -16,14 +16,14 @@ namespace schlieren
     deletes the framebuffer and the depth renderbuffer, then tests
     `depthBufferID` a second time where it plainly meant `colorTextureID` --
     so the colour texture is leaked on every release (SDK b1afaf9,
-    `FFGLFBO.cpp`). `Destroy()` deletes it first. It matters here: the whole
-    simulation reallocates when Detail changes or the raster does.
+    `FFGLFBO.cpp`). `Destroy()` deletes it first. It matters here: the
+    pressure buffer reallocates whenever the raster changes.
 
-    **It owns its filtering and its wrap**, because this plugin's buffers want
-    different answers: the Fourier buffers are read texel-for-texel and must
-    not be filtered; the surface is read between texels AND is periodic -- the
-    simulated domain wraps, so a read past its edge must come back in at the
-    other side, which is `GL_REPEAT` and nothing else.
+    **It owns its filtering and its wrap.** Both of this plugin's buffers, the
+    projection table and the pressure on the frame (a pixel wider each side,
+    for the central difference), are data read texel-for-texel, so they ask
+    for Nearest and Clamp. The other answers are kept from millpond, whose
+    class this is, for the next plugin that wants them.
 */
 class PassBuffer : public ffglex::FFGLFBO
 {
