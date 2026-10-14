@@ -139,11 +139,12 @@ On Windows, the x64 build loads, registers and renders in Resolume Arena 7.27.1 
 fleet's Windows machine, which has software rendering (Mesa llvmpipe), no GPU and no
 sound device. It passed all 9 of the fleet's Arena checks that can run there (the audio
 one is skipped): every control as declared, by name, order, type, range and default, and
-nothing in Arena's log. Eight controls measurably changed the picture there (Loudness,
-Field Width, Sensitivity, Distance, Grey Field, View, Mix and Arena's own Opacity). The
-other ten that act on the rings (Fire On, Pulse, Length, the speaker's position, Slow
-Motion, Walls, Reflection, Optics and Knife Angle) came back too close to call rather
-than dead: with a pulse on every beat the air never sits still between two of the gate's
+nothing in Arena's log. Eight controls measurably changed the picture there in one run (Loudness,
+Field Width, Sensitivity, Distance, Grey Field, View, Mix and Arena's own Opacity), and nine
+in the formal run on the build being released, where Pulse joined them. The rest that act
+on the rings (Fire On, Length, the speaker's position, Slow Motion, Walls, Reflection,
+Optics and Knife Angle, and Pulse in the first run) came back too close to call rather than
+dead: with a pulse on every beat the air never sits still between two of the gate's
 grabs, so it can't tell a control's change from the rings moving. Threshold, Accent and
 the Audio input need sound, which that machine hasn't got.
 

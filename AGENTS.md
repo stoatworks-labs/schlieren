@@ -229,7 +229,8 @@ the defaults.
 - **Windows: gated in Resolume Arena 7.27.1 on win-lab** (2026-10-14; MSVC x64;
   Mesa llvmpipe, no GPU, no sound device): 9 passed, 0 failed, 1 skipped (audio).
   Every control as declared. Live: Loudness, Field Width, Sensitivity, Distance,
-  Grey Field, View, Mix, Opacity. Inconclusive, none dead: Fire On, Pulse, Length,
+  Grey Field, View, Mix, Opacity, and Pulse in the formal run 2 on the release build.
+  Inconclusive, none dead: Fire On, Pulse (run 1 only), Length,
   Speaker X/Y, Slow Motion, Walls (held at Speaker Y 0.15), Reflection (Walls
   Box), Optics, Knife Angle (probed 0 and 0.25): on Fire On Beat the rings move
   between any two grabs, so the noise floor is ~27 levels, which is the gate's

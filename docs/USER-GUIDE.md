@@ -33,8 +33,8 @@ and shadow on the other, and the clip's lines bend where the rings cross them.*
 > fleet's own test host, `oxbow`, for 120 frames.
 > On Windows it loads, registers and renders in Resolume Arena 7.27.1, with every control as
 > declared, on a machine with software rendering and no GPU or sound device. Eight controls
-> measurably changed the picture there; the ten that act on the rings themselves were too close
-> to call, because with a pulse on every beat the air never sits still long enough for the
+> measurably changed the picture there in one run and nine in another; the rest that act on
+> the rings themselves were too close to call, because with a pulse on every beat the air never sits still long enough for the
 > fleet's test to tell a setting from the rings moving.
 > No host has played it any music, so what Threshold and Accent make of Resolume's own spectrum
 > is untested. Try it on a spare layer before you put it in a show.

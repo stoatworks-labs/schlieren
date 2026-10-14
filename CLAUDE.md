@@ -80,7 +80,7 @@ simplification, the projection table's mapping or the composite's stencils.
 ## Not done yet
 - Never loaded into Resolume on macOS. No host has played it any music.
 - Windows: gated in Arena 7.27.1 on win-lab (llvmpipe, no sound): 9 passed, audio
-  skipped; 8 controls live, the 10 ring controls inconclusive (the air never
+  skipped; 8 controls live (9 in a second run), the other ring controls inconclusive (the air never
   stands still), none dead; plugin-bench `arena/expect/schlieren.json`.
 - No browser demo, no OpenFX port, no video, no presets. The user guide is
   `docs/USER-GUIDE.md`.
