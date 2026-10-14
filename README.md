@@ -25,6 +25,38 @@ Pressure waves on the beat, seen through a schlieren camera, as an FFGL effect f
 Resolume's bundled `IntoTheGlow_02` on the defaults at 120 BPM, 2.8 seconds in: five
 beats' worth of pulses in flight, the oldest nearly at the frame's edge.</sub>
 
+<!-- downloads:start -->
+
+## Download
+
+**[v0.1.0](https://github.com/stoatworks-labs/schlieren/releases/tag/v0.1.0)** — prebuilt for macOS and Windows. Pick your platform:
+
+<details>
+<summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`schlieren-0.1.0-macos-universal.dmg`](https://github.com/stoatworks-labs/schlieren/releases/download/v0.1.0/schlieren-0.1.0-macos-universal.dmg) | 260 KB |
+| Universal (Apple Silicon + Intel) · .zip archive | [`schlieren-macos-universal.zip`](https://github.com/stoatworks-labs/schlieren/releases/latest/download/schlieren-macos-universal.zip) | 219 KB |
+
+</details>
+
+<details>
+<summary><b>Windows</b> — x64</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| x64 · .exe installer | [`schlieren-0.1.0-windows-x86_64-setup.exe`](https://github.com/stoatworks-labs/schlieren/releases/download/v0.1.0/schlieren-0.1.0-windows-x86_64-setup.exe) | 240 KB |
+| x64 · .zip archive | [`schlieren-windows-x86_64.zip`](https://github.com/stoatworks-labs/schlieren/releases/latest/download/schlieren-windows-x86_64.zip) | 135 KB |
+
+</details>
+
+All builds, checksums and release notes: [github.com/stoatworks-labs/schlieren/releases](https://github.com/stoatworks-labs/schlieren/releases).
+
+macOS builds are signed and notarised and open normally. The Windows builds are unsigned, so SmartScreen warns once.
+
+<!-- downloads:end -->
+
 ## The one idea
 
 **A loudspeaker fires a pulse into the air on every beat, and you watch the clip
