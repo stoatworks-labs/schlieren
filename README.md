@@ -186,8 +186,8 @@ surface. That's about 165 dB at 1 m, which is where the default sits; past rough
 prediction. Reflections are superposed linearly, so shocks meeting their own echoes do
 nothing clever. AGENTS.md lists every approximation.
 
-There's a [user guide](docs/USER-GUIDE.md), but no browser demo, no OpenFX port and no
-presets.
+There's a [user guide](docs/USER-GUIDE.md). No OpenFX port and no presets. The browser
+demo is below.
 
 ## Build
 
@@ -230,6 +230,31 @@ Render a frame of your own:
 ```bash
 ./build/sztest --out /tmp/schlieren.png --set "Optics=Colour" --set "Grey Field=1"
 ```
+
+## Browser demo
+
+**<https://schlieren-demo.stoatworks-labs.com/>** runs the plugin itself, not a port of it:
+`source/Schlieren.cpp` and everything it calls (the air, the acoustics, the audio analyser,
+the parameter table), with the FFGL SDK classes it uses, compiled unmodified to WebAssembly
+by `demo/tools/build-wasm.sh` (emscripten) and drawing with its own GLSL in WebGL2. The
+panel is read back from the plugin's own declarations. The page is the host, and a thin
+one: its tempo is a BPM clock it keeps itself (a Host BPM field, 120 to start with), handed
+to the plugin as Resolume hands over its transport; there's no audio, so Fire On Onset
+never fires and Accent does nothing, as in Resolume with nothing routed; Fire and Clear
+are buttons; the clock is the browser's; the clip is generated in the page; and five GL
+entry points are translated for WebGL2 (`demo/wasm/gl_shim.cpp`). It needs
+`EXT_color_buffer_float`, because the pressure is a float texture the plugin renders into.
+
+`tools/verify.sh` fails if `demo/shaders.js` or any input of the `.wasm` has drifted from
+`source/`. `demo/tools/crosscheck/crosscheck.mjs` renders five schedules through the page's
+WebAssembly in headless Chrome and through `sztest`, and compares the frames. On
+28 October 2026, against an `sztest` built with `-ffp-contract=off` (WebAssembly has no
+fused multiply-add), every frame agreed to within a level in 255 on this Mac's GPU and two
+on SwiftShader, with the same pulses and images in flight. Against the default Apple
+Silicon build, which fuses them, a Blast's shock fronts land a pixel apart and 2.9% of that
+frame differs by more than 8 levels, which is exactly how far the plugin's own Apple
+Silicon build is from its own build without fusing. It's a demo, not the plugin; the page
+lists everything it doesn't reproduce.
 
 ## License
 

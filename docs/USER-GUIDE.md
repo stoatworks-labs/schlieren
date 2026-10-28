@@ -401,7 +401,10 @@ and what unit the host's clock arrives in.
 - **The speaker isn't drawn.** You see its pulses, not the speaker.
 - **At most 24 pulses** are in the air, and 128 images of them reach the GPU; the oldest pulses and
   the weakest images go first.
-- **No presets**, no browser demo and no OpenFX version.
+- **No presets** and no OpenFX version. There is a browser demo at
+  [schlieren-demo.stoatworks-labs.com](https://schlieren-demo.stoatworks-labs.com/): the
+  plugin's own code compiled for the browser, on a pretend tempo of its own and with no
+  audio, so Onset never fires there. It's a demo, not the plugin.
 
 ---
 

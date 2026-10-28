@@ -82,8 +82,25 @@ simplification, the projection table's mapping or the composite's stencils.
 - Windows: gated in Arena 7.27.1 on win-lab (llvmpipe, no sound): 9 passed, audio
   skipped; 8 controls live (9 in a second run), the other ring controls inconclusive (the air never
   stands still), none dead; plugin-bench `arena/expect/schlieren.json`.
-- No browser demo, no OpenFX port, no video, no presets. The user guide is
-  `docs/USER-GUIDE.md`.
+- No OpenFX port, no video, no presets. The user guide is `docs/USER-GUIDE.md`.
+
+## Browser demo (`demo/`)
+- Live at https://schlieren-demo.stoatworks-labs.com/ (Worker `schlieren-demo`, a zone
+  route plus a proxied AAAA 100:: record; `.github/workflows/deploy.yml` deploys a push
+  to main). It runs the plugin's C++ as WebAssembly with its own GLSL; AGENTS.md has
+  what it substitutes (tempo, no audio, five GL entry points) and why.
+- After changing a shader: `python3 demo/tools/check_shaders.py --write`. After changing
+  anything in `source/`: `demo/tools/build-wasm.sh` (emscripten), and commit
+  `demo/schlieren-core.{js,wasm}` and `demo/wasm/inputs.sha256`. `tools/verify.sh` fails
+  until both are done.
+- Never edit `demo/vendor/`: it is stoatworks-backend's `resolume-demo/kit`.
+- Look at it: `python3 -m http.server 8722 --directory demo`, then open it; check the
+  console, that a ring leaves on every beat and that a control moves the picture.
+- Crosscheck against sztest (needs Chrome and a strict build, a few minutes):
+  `cmake -B build-strict -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-ffp-contract=off`,
+  `cmake --build build-strict --target sztest`, then
+  `node demo/tools/crosscheck/crosscheck.mjs --sztest build-strict/sztest --native build/sztest`
+  (`--gpu` for the GPU instead of SwiftShader). All five scenarios must be `ok`.
 
 ## Diagnostics
 

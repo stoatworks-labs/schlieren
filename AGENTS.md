@@ -237,9 +237,68 @@ the defaults.
   blind spot for pictures that never stand still (copperlist's). Fire and Clear
   are events the gate never presses. The expectation is plugin-bench
   `arena/expect/schlieren.json`.
-- No video, no browser demo, no OpenFX port, no presets. The user guide is
-  `docs/USER-GUIDE.md`.
+- No video, no OpenFX port, no presets. The user guide is `docs/USER-GUIDE.md`.
+  The browser demo is below.
 - Open questions for Allan: a speaker silhouette (real schlieren photographs show
   the source as a shadow); a stereo pair of speakers (the image machinery makes
   it cheap); air temperature (c, ρ and n all move with it); whether the 100 km
   Distance reads as a joke or a feature in the inspector.
+
+## The browser demo (`demo/`, schlieren-demo.stoatworks-labs.com)
+
+Built 2026-10-28 in the demo sweep. It **runs the plugin, it does not port it**:
+zoetrope's recipe. `demo/schlieren-core.wasm` is `source/Schlieren.cpp` and
+everything it calls, with the FFGL SDK pieces it needs, compiled unmodified by
+`demo/tools/build-wasm.sh`; `demo/wasm/glue.cpp` plays the host (constructs the
+plugin, reads its declarations back through the SDK's host getters, forwards
+SetFloatParameter, SetTime, SetBeatInfo and ProcessOpenGL in sztest's order).
+The air's state between frames is the plugin's own pulse list, so there is
+nothing for the page to keep; the GPU passes hold none.
+
+What the page substitutes, and says so in its banner and its disclosure:
+
+- **Tempo**: a Host BPM field (120 at first) and a bar phase accumulated from
+  the page's seconds, handed to SetBeatInfo every frame as Resolume would. The
+  plugin then takes its Resolume path (beats placed inside the frame), not the
+  fallback clock Air.cpp keeps for hosts that never move the bar phase.
+- **No audio**: the Audio buffer is shown, never written. Onset never fires,
+  Threshold does nothing, and Accent does nothing, because with no signal the
+  plugin fires every pulse at Loudness: the same as Resolume with nothing routed.
+- **Clock**: the kit's seconds through SetTime; the plugin's own vote settles on
+  seconds in four frames. Restart is a backward jump the plugin treats as no
+  time passing; the air carries on.
+- **Five GL entry points** in `demo/wasm/gl_shim.cpp`: glShaderSource (refuses
+  any text that is not the page's checked assembly, then the kit's `port()`),
+  glEnable/glDisable/glIsEnabled (GL_PROGRAM_POINT_SIZE), and **glTexImage2D**.
+
+**The trap the shim exists for.** The FFGL SDK's `FFGLFBO::Initialise`
+allocates every colour target as `glTexImage2D( ..., internal, ..., GL_RGBA,
+GL_FLOAT, NULL )`. Desktop GL takes any client format with no data; WebGL2
+takes exactly the one ES 3.0 pairs with the sized format, and for R32F (the
+table and the pressure) that is GL_RED. With GL_RGBA the allocation fails with
+INVALID_OPERATION and the passes draw into nothing. The shim passes ES's pair
+for a no-data float allocation and aborts on anything else. zoetrope never met
+it because RGBA16F does pair with GL_RGBA.
+
+**A shock front is FMA-sensitive.** WebAssembly has no fused multiply-add;
+Apple clang fuses on arm64 by default. On smooth pulses that changes nothing
+visible, but a shock is a jump, the knife sees a jump as a deflection a pixel
+wide, and a last-bit difference that moves one across a pixel boundary changes
+that pixel by up to 175 levels. Measured 2026-10-28 on a Blast at 180 dB in a
+box: the arm64 sztest against an `-ffp-contract=off` sztest, 2.9% of pixels
+over 8 levels apart -- the plugin's own Apple Silicon and Intel slices differ
+like that too. The page against the `-ffp-contract=off` sztest: within one
+level everywhere, on the GPU and on SwiftShader. So `demo/tools/crosscheck`
+holds the page to the strict build and only reports the native one.
+
+**Verify it** (CLAUDE.md has the commands): `tools/verify.sh` runs
+`demo/tools/check_shaders.py` (the GLSL copy, its assembly, and the hash of
+every input of the .wasm); the crosscheck needs Chrome and a strict sztest and
+is run by hand; a change to anything in `source/` needs `build-wasm.sh` again
+or verify fails. Then serve `demo/` and look at it: no console errors, a ring
+per beat, and a control that moves the picture.
+
+**Not on the page**: Resolume's transport, any audio, the host's padding of a
+clip, and any claim about render cost beyond "held 60 fps on this Mac's GPU
+with a box on the half beat at 960x540".
+
