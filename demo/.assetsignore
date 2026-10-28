@@ -1,0 +1,9 @@
+# Not part of the page. tools/ holds check_shaders.py (the repo-side check that
+# the demo's copies are still the plugin's), build-wasm.sh and crosscheck/ (the
+# harness that renders one schedule through this page's WebAssembly and through
+# sztest and compares them); wasm/ holds the page's host glue and GL shim, which
+# are compiled INTO schlieren-core.wasm, and the build's input manifest.
+# wrangler would otherwise upload them and serve them, which is neither useful
+# nor anybody's business.
+tools/
+wasm/

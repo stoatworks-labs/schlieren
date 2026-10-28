@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Schlieren — browser demo | Stoatworks Labs</title>
+    <meta name="description" content="Try the Schlieren FFGL effect for Resolume in your browser: a loudspeaker fires a pulse of sound on every beat and you watch your clip through the air it travels in, as a schlieren camera would — rings of light and shade, shocks on a loud hit, caustics on a shadowgraph's screen and echoes off the walls. The plugin's own C++ compiled unmodified to WebAssembly, drawing with its own GLSL in WebGL2, on a simulated BPM clock with no audio. A demo, not the plugin." />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./vendor/kit.css" />
+    <link rel="canonical" href="https://schlieren-demo.stoatworks-labs.com/" />
+  </head>
+  <body>
+    <main id="demo">
+      <noscript>
+        <p>
+          This demo runs the plugin's own C++, compiled to WebAssembly, and its
+          shaders in your browser, so it needs JavaScript and WebGL2. The plugin
+          itself, its source and its downloads are on
+          <a href="https://github.com/stoatworks-labs/schlieren">its repository</a>.
+        </p>
+      </noscript>
+    </main>
+
+    <script type="module" src="./plugin.js"></script>
+    <script
+      src="./vendor/support-footer.js"
+      defer
+      data-app="Schlieren"
+      data-repo="https://github.com/stoatworks-labs/schlieren"
+      data-note="A browser demo of the plugin's own C++ and shaders, compiled to WebAssembly and WebGL2. Nothing you load here leaves your machine."
+    ></script>
+  </body>
+</html>
